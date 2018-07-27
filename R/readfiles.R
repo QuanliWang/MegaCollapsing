@@ -31,3 +31,41 @@ read.collapsing.matrix <- function(matrix_file) {
   rownames(mat) <- mat[,"sample.gene"]
   return(mat)
 }
+
+read.collapsing.data <- function(samples, syn, non.syn, sample.column = "IID") {
+  if (file.exists(samples)) {
+    sample_list <- read.sample.list(samples)
+  } else {
+    stop("input sample file not found")
+  }
+
+  if (!is.element(sample.column, colnames(sample_list))) {
+    stop("sample ID column not found")
+  }
+
+  if (file.exists(syn)) {
+    syn.mat <- read.collapsing.matrix(syn)
+  } else {
+    stop("input syn matrix file not found")
+  }
+
+  if (file.exists(non.syn)) {
+    non.syn.mat <- read.collapsing.matrix(non.syn)
+  } else {
+    stop("input non.syn matrix file not found")
+  }
+
+  if (!all.equal(dim(syn.mat),dim(non.syn.mat))) {
+    stop("syn and non.syn do not have matching dimensions")
+  }
+
+  #reorder columns
+  common_sample_list <-intersect(colnames(syn.mat),sample_list[,sample.column])
+  syn.mat <- syn.mat[,common_sample_list]
+  non.syn.mat <- non.syn.mat[,common_sample_list]
+
+  #redorder rows
+  rownames(sample_list) <- sample_list[,sample.column]
+  sample_list <- sample_list[common_sample_list,]
+  return(list( sample.list = sample_list, syn = syn.mat, non.syn = non.syn.mat))
+}
