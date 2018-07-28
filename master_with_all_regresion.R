@@ -15,28 +15,16 @@ mega.matrix <- as.mega.matrix(gene.sets, input.data)
 
 
 ## save output
-write.table(res,file="syn_collapsing_matrix2.tsv",sep ="\t")
-write.table(sample_list,file = "samplelist.tsv",sep = "\t",row.names = FALSE,col.names = FALSE)
-write.table(res,file="non_syn_collapsing_matrix2.tsv",sep ="\t")
+#write.table(input.data$sample.list, file = "samplelist.tsv",sep = "\t",row.names = FALSE,col.names = FALSE)
+#write.table(mega.matrix$mega.syn,file="syn_collapsing_matrix.tsv",sep ="\t")
+#write.table(mega.matrix$mega.non.syn ,file="non_syn_collapsing_matrix.tsv",sep ="\t")
 
-save.image(file = "all.data.RData")
-
+#just save a copy of the data, as it took so long to compute
+#save.image(file = "all.data.RData")
 
 # fit regression models
-Y <- sample_list[,'Status'] - 1
-p_values = matrix(NA,length(gene_sets),4)
-rownames(p_values) <- meta_gene_names
-colnames(p_values) <- c('(Intercept)','V1','gender','sV1') #a hack
-gender = sample_list[,'Gender']
-for (i in 1:length(gene_sets)) {
-  print(i)
-  V1 = non_syn_Meta_matrix2[i,]
-  sV1 = syn_Meta_matrix2[i,]
-  try({
-  V1_glm <- glm( Y ~ V1 + gender + sV1, family = binomial(link = logit))
-  coef <- summary(V1_glm)$coef
-  p_values[i,rownames(coef)] <- coef[,4]
-  }, silent=TRUE)
-}
+X <- c("Gender", "Covar1")
+Y = NULL #default to sample_list[,'Status'] - 1
+p_values <- burden.test(input.data$sample.list, gene.sets, mega.matrix$mega.syn,mega.matrix$mega.non.syn, X, Y)
 
 write.table(p_values,file="p_values_from_collapsing_matrix2.tsv",sep ="\t")
