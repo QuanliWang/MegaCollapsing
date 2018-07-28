@@ -4,11 +4,16 @@ library(MegaCollapsing)
 sample_file <- "/Users/qw2192/Desktop/AZ/MegaCollapsing/sup/PEDMAP_v3_GGE_incCovar.txt"
 syn_file <- "/Users/qw2192/Desktop/AZ/MegaCollapsing/sup/4_v3_GGE_CCDS_syn_0005_ExACEVS0_matrix.txt"
 non_syn_file <- "/Users/qw2192/Desktop/AZ/MegaCollapsing/sup/1_v3_GGE_CCDS_hotzone_0005_ExACEVS0_matrix.txt"
-meta_gene_file <- "/Users/qw2192/Desktop/AZ/MegaCollapsing/sup/CAKUT_msigdb.v6.0.symbols"
+mega_gene_file <- "/Users/qw2192/Desktop/AZ/MegaCollapsing/sup/CAKUT_msigdb.v6.0.symbols"
+exclude_file <- "/Users/qw2192/Desktop/AZ/MegaCollapsing/sup/ExcludeGenes.txt"
 
 input.data <- read.collapsing.data(sample_file, syn_file, non_syn_file, sample.column = "IID")
-gene.sets <- read.gene.sets(meta_gene_file)
-rm(sample_file,syn_file,non_syn_file,meta_gene_file)
+gene.sets <- read.gene.sets(mega_gene_file)
+if(!is.null(exclude_file)) {
+  input.data <- exclude.genes(input.data, exclude_file)
+}
+
+rm(sample_file,syn_file,non_syn_file,mega_gene_file,exclude_file)
 
 ## generate meta gene matrices
 mega.matrix <- as.mega.matrix(gene.sets, input.data)
@@ -27,4 +32,4 @@ X <- c("Gender", "Covar1")
 Y = NULL #default to sample_list[,'Status'] - 1
 p_values <- burden.test(input.data$sample.list, gene.sets, mega.matrix$mega.syn,mega.matrix$mega.non.syn, X, Y)
 
-write.table(p_values,file="p_values_from_collapsing_matrix2.tsv",sep ="\t")
+write.table(p_values,file="p_values_from_mega_collapsing.tsv",sep ="\t")

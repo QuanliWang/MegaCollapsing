@@ -1,3 +1,23 @@
+exclude.genes <- function(input.data, exclude.file) {
+  if (!file.exists(exclude.file)) {
+    stop("exlude gene file not found")
+  }
+  exclude.list  <-  read.csv(exclude.file,header = FALSE, stringsAsFactors = FALSE)
+  genes <- rownames(input.data$non.syn)
+  common.genes <- intersect(genes, exclude.list[,1])
+  if (length(common.genes) > 0) {
+    index <- match(common.genes, genes)
+    trimmed.data <- input.data$non.syn[index,]
+    sample.to.exclude <- which(colSums(trimmed.data) > 0)
+    if (length(sample.to.exclude) > 0) {
+      input.data$sample.list <- input.data$sample.list[-sample.to.exclude,]
+      input.data$syn <- input.data$syn[,-sample.to.exclude]
+      input.data$non.syn <- input.data$non.syn[,-sample.to.exclude]
+    }
+  }
+  return(input.data)
+}
+
 as.mega.matrix<- function(gene.sets, input.data) {
   mega.gene.names<- sapply(gene.sets, function(x) x[1])
   common_sample_list <- rownames(input.data$sample.list)
