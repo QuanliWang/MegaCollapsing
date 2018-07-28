@@ -6,18 +6,17 @@ syn_file <- "/Users/qw2192/Desktop/AZ/MegaCollapsing/sup/4_v3_GGE_CCDS_syn_0005_
 non_syn_file <- "/Users/qw2192/Desktop/AZ/MegaCollapsing/sup/1_v3_GGE_CCDS_hotzone_0005_ExACEVS0_matrix.txt"
 mega_gene_file <- "/Users/qw2192/Desktop/AZ/MegaCollapsing/sup/CAKUT_msigdb.v6.0.symbols"
 exclude_file <- "/Users/qw2192/Desktop/AZ/MegaCollapsing/sup/ExcludeGenes.txt"
+#exclude_file <- NULL
 
 input.data <- read.collapsing.data(sample_file, syn_file, non_syn_file, sample.column = "IID")
-gene.sets <- read.gene.sets(mega_gene_file)
 if(!is.null(exclude_file)) {
   input.data <- exclude.genes(input.data, exclude_file)
 }
-
+gene.sets <- read.gene.sets(mega_gene_file)
 rm(sample_file,syn_file,non_syn_file,mega_gene_file,exclude_file)
 
 ## generate meta gene matrices
 mega.matrix <- as.mega.matrix(gene.sets, input.data)
-
 
 ## save output
 #write.table(input.data$sample.list, file = "samplelist.tsv",sep = "\t",row.names = FALSE,col.names = FALSE)
