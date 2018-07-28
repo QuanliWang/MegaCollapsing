@@ -43,10 +43,12 @@ read.collapsing.data <- function(samples, syn, non.syn, sample.column = "IID") {
     stop("sample ID column not found")
   }
 
-  if (file.exists(syn)) {
-    syn.mat <- read.collapsing.matrix(syn)
-  } else {
-    stop("input syn matrix file not found")
+  if (!is.null(syn)) {
+    if (file.exists(syn)) {
+      syn.mat <- read.collapsing.matrix(syn)
+    } else {
+      stop("input syn matrix file not found")
+    }
   }
 
   if (file.exists(non.syn)) {
@@ -55,17 +57,25 @@ read.collapsing.data <- function(samples, syn, non.syn, sample.column = "IID") {
     stop("input non.syn matrix file not found")
   }
 
-  if (!all.equal(dim(syn.mat),dim(non.syn.mat))) {
-    stop("syn and non.syn do not have matching dimensions")
+  if (!is.null(syn)) {
+    if (!all.equal(dim(syn.mat),dim(non.syn.mat))) {
+      stop("syn and non.syn do not have matching dimensions")
+    }
   }
 
   #reorder columns
-  common_sample_list <-intersect(colnames(syn.mat),sample_list[,sample.column])
-  syn.mat <- syn.mat[,common_sample_list]
+  common_sample_list <-intersect(colnames(non.syn.mat),sample_list[,sample.column])
+  if (!is.null(syn)) {
+    syn.mat <- syn.mat[,common_sample_list]
+  }
   non.syn.mat <- non.syn.mat[,common_sample_list]
 
   #redorder rows
   rownames(sample_list) <- sample_list[,sample.column]
   sample_list <- sample_list[common_sample_list,]
-  return(list( sample.list = sample_list, syn = syn.mat, non.syn = non.syn.mat))
+  if (is.null(syn)) {
+    return(list( sample.list = sample_list, non.syn = non.syn.mat))
+  } else {
+    return(list( sample.list = sample_list, syn = syn.mat, non.syn = non.syn.mat))
+  }
 }

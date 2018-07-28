@@ -19,9 +19,18 @@ read.data <- function(sample.file, matrix.file, filter.list = NULL) {
     genes.common <- intersect(genes,filter.list)
     matrix <- matrix[genes.common,]
   }
+
+  na.row <- rowSums(is.na(matrix))
+  to_be_removed <- which(na.row == dim(matrix)[2])
+  if (length(to_be_removed) > 0) {
+    matrix <- matrix[-to_be_removed,]
+  }
+
   out <- list()
   out$data <- matrix
   out$is.case <- is.case
+
+
   out
 }
 
@@ -77,3 +86,11 @@ get.pvalues <-function(matrix, is.case, n.permutations = 1000) {
   out
 }
 
+## random sample some gene set
+random.gene.sets <- function(gene.sets, genes) {
+  gene.set.sizes <- unlist(lapply(gene.sets,length))
+  for (i in 1:length(gene.sets)) {
+    gene.sets[[i]][3:gene.set.sizes[i]] <- sample(genes,gene.set.sizes[i]-2)
+  }
+  return(gene.sets)
+}
