@@ -60,10 +60,10 @@ as.mega.matrix<- function(gene.sets, input.data) {
   }
 }
 
-burden.test <- function(sample.list, gene.set, syn.mat, non.syn.mat, X = NULL, Y = NULL) {
+burden.test <- function(sample.list, gene.sets, syn.mat, non.syn.mat, X = NULL, Y = NULL) {
   if (is.null(Y)) {
     if (is.element("Status",names(sample.list))) {
-      Y = Y <- sample.list[,'Status'] - 1
+      Y <- sample.list[,'Status'] - 1
     } else {
       stop("default Y variable was not found")
     }
@@ -76,11 +76,15 @@ burden.test <- function(sample.list, gene.set, syn.mat, non.syn.mat, X = NULL, Y
     X0 <- sample.list[,X]
   }
   data.base <- cbind(Y,X0)
+  if (length(X) == 1) {
+    data.base <- as.data.frame(data.base)
+    names(data.base) <- c("Y",X)
+  }
 
   p <- dim(data.base)[2] + 2
-  mega.gene.names <- lapply(gene.set, function (x) x[[1]])
+  mega.gene.names <- lapply(gene.sets, function (x) x[[1]])
 
-  p_values <- matrix(NA,length(gene.set),p)
+  p_values <- matrix(NA,length(gene.sets),p)
   rownames(p_values) <- mega.gene.names
   colnames(p_values) <- c('(Intercept)', 'non.syn', 'syn', names(data.base)[-1])
 
