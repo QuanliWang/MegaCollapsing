@@ -22,8 +22,8 @@ X <- c("Gender")
 Y = NULL #default to sample_list[,'Status'] - 1
 
 # fit regression models
-perm.result <- burden.test.with.permutation(input.data$sample.list, gene.sets[1:10],
-                                            mega.matrix$mega.syn[1:10,], mega.matrix$mega.non.syn[1:10,],
+perm.result <- burden.test.with.permutation(input.data$sample.list, gene.sets,
+                                            mega.matrix$mega.syn, mega.matrix$mega.non.syn,
                                             X, Y, n.permutations = 100)
 write.table(perm.result$p_summary,file="p_perm_null_100.tsv",sep ="\t")
 
