@@ -1,12 +1,17 @@
 #master prorgam
 library(MegaCollapsing)
 
-sample_file <- "/Users/qw2192/Desktop/AZ/MegaCollapsing/sup/PEDMAP_v3_GGE_incCovar.txt"
-syn_file <- "/Users/qw2192/Desktop/AZ/MegaCollapsing/sup/4_v3_GGE_CCDS_syn_0005_ExACEVS0_matrix.txt"
-non_syn_file <- "/Users/qw2192/Desktop/AZ/MegaCollapsing/sup/1_v3_GGE_CCDS_hotzone_0005_ExACEVS0_matrix.txt"
-mega_gene_file <- "/Users/qw2192/Desktop/AZ/MegaCollapsing/sup/CAKUT_msigdb.v6.0.symbols"
-exclude_file <- "/Users/qw2192/Desktop/AZ/MegaCollapsing/sup/ExcludeGenes.txt"
-#exclude_file <- NULL
+#sample_file <- "/Users/qw2192/Desktop/AZ/MegaCollapsing/sup/PEDMAP_v3_GGE_incCovar.txt"
+#syn_file <- "/Users/qw2192/Desktop/AZ/MegaCollapsing/sup/4_v3_GGE_CCDS_syn_0005_ExACEVS0_matrix.txt"
+#non_syn_file <- "/Users/qw2192/Desktop/AZ/MegaCollapsing/sup/1_v3_GGE_CCDS_hotzone_0005_ExACEVS0_matrix.txt"
+#mega_gene_file <- "/Users/qw2192/Desktop/AZ/MegaCollapsing/sup/CAKUT_msigdb.v6.0.symbols"
+#exclude_file <- "/Users/qw2192/Desktop/AZ/MegaCollapsing/sup/ExcludeGenes.txt"
+
+sample_file <- "/Users/qw2192/Desktop/new_study/PEDMAP_SAGA_incCovar.txt"
+syn_file <- "/Users/qw2192/Desktop/new_study/2018-07-11_09-41-31_dominantSynonymous_matrix.txt"
+non_syn_file <- "/Users/qw2192/Desktop/new_study/2018-07-11_08-39-46_dominantFlexiblePolyphenDamaging_matrix.txt"
+mega_gene_file <- "/Users/qw2192/Desktop/new_study/pruned_msigdb.v6.0.symbols"
+exclude_file <- NULL
 
 input.data <- read.collapsing.data(sample_file, syn_file, non_syn_file, sample.column = "IID")
 if(!is.null(exclude_file)) {
@@ -27,8 +32,11 @@ mega.matrix <- as.mega.matrix(gene.sets, input.data)
 #save.image(file = "all.data.RData")
 
 # fit regression models
-X <- c("Gender", "Covar1")
+X <- c("Gender")
 Y = NULL #default to sample_list[,'Status'] - 1
-p_values <- burden.test(input.data$sample.list, gene.sets, mega.matrix$mega.syn,mega.matrix$mega.non.syn, X, Y)
+result <- burden.test(input.data$sample.list, gene.sets[1:10], mega.matrix$mega.syn,mega.matrix$mega.non.syn, X, Y)
 
-write.table(p_values,file="p_values_from_mega_collapsing.tsv",sep ="\t")
+write.table(result$p_values,file="p_values_from_mega_collapsing.tsv",sep ="\t")
+
+
+
