@@ -34,8 +34,9 @@ read.data <- function(sample.file, matrix.file, filter.list = NULL) {
   out
 }
 
-get.pvalues <-function(matrix, is.case, n.permutations = 1000) {
+get.pvalues <-function(matrix, is.case, n.permutations = 1000, with_contingency = FALSE) {
   #Number of cases and controls
+  matrix[matrix>0] <- 1
   n.samples <- length(is.case)
   n.cases <- sum(is.case)
   n.controls <- n.samples - n.cases
@@ -58,31 +59,54 @@ get.pvalues <-function(matrix, is.case, n.permutations = 1000) {
     }
   }
 
-  #permutation, save all p-values just in case median will be needed later on
-  P.Values <- matrix(1,dim(matrix)[1],n.permutations)
   total.1 <- rowSums(matrix)
-  for (i in 1: n.permutations) {
-    K <- sample.int(n.samples, size = n.cases, replace = FALSE)
-    Labels.1.1 <- rowSums(matrix[,K])
-    Labels.0.1 <- total.1 - Labels.1.1
-    P.Values[,i] <- sort(Fisher.precompute[cbind(Labels.1.1+1,Labels.0.1+1)])
+  if (n.permutations > 0) {
+  #permutation, save all p-values just in case median will be needed later on
+    P.Values <- matrix(1,dim(matrix)[1],n.permutations)
+
+    for (i in 1: n.permutations) {
+      K <- sample.int(n.samples, size = n.cases, replace = FALSE)
+      Labels.1.1 <- rowSums(matrix[,K])
+      Labels.0.1 <- total.1 - Labels.1.1
+      P.Values[,i] <- sort(Fisher.precompute[cbind(Labels.1.1+1,Labels.0.1+1)])
+    }
+    P.perm <- rowMeans(P.Values)
+    #P.perm <- sapply(P.Values, function(x) quantile(x,c(0.025, 0.50, 0.975)))
   }
-  P.perm <- rowMeans(P.Values)
-  #P.perm <- sapply(P.Values, function(x) quantile(x,c(0.025, 0.50, 0.975)))
 
 
   #compute observed (true case control configration) p-values
   K <- which(is.case)
   Labels.1.1 <- rowSums(matrix[,K])
   Labels.0.1 <- total.1 - Labels.1.1
-  P.observed <- sort(Fisher.precompute[cbind(Labels.1.1+1,Labels.0.1+1)])
+
+  if (n.permutations > 0) {
+    P.observed <- sort(Fisher.precompute[cbind(Labels.1.1+1,Labels.0.1+1)])
+  } else {
+    P.observed <- Fisher.precompute[cbind(Labels.1.1+1,Labels.0.1+1)] #no sorting
+  }
+  names(P.observed) <- rownames(matrix)
+
+  if (with_contingency) {
+    contingency_table <- matrix(NA, nrow = length(P.observed),4)
+    contingency_table[,1] <- Labels.1.1
+    contingency_table[,2] <- n.cases - contingency_table[,1]
+    contingency_table[,3] <- Labels.0.1
+    contingency_table[,4] <- n.controls - contingency_table[,3]
+    rownames(contingency_table) <- rownames(matrix)
+  }
 
   out <- list()
-  out$perm <- P.perm
-  #out$perm <- P.perm[,2]
-  #out$perm.LCI <- P.perm[,1]
-  #out$perm.UCI <- P.perm[,3]
+  if (n.permutations > 0) {
+    out$perm <- P.perm
+    #out$perm <- P.perm[,2]
+    #out$perm.LCI <- P.perm[,1]
+    #out$perm.UCI <- P.perm[,3]
+  }
   out$observed <- P.observed
+  if (with_contingency) {
+    out$contingency.table <- contingency_table
+  }
   out
 }
 

@@ -21,8 +21,10 @@ read.gene.sets <- function(meta_gene_file) {
 read.sample.list <- function(sample_file) {
   samplelist <-  read.table(sample_file,header = TRUE, stringsAsFactors = FALSE, sep = "\t")
   offending_sample_name_index <- grep("^[0-9]",samplelist[,"IID"])
-  samplelist[,"IID"][offending_sample_name_index] <-
-    sapply(samplelist[offending_sample_name_index,"IID"], function(x) paste("X",x,sep=""))
+  if (length(offending_sample_name_index) > 0) {
+    samplelist[,"IID"][offending_sample_name_index] <-
+      sapply(samplelist[offending_sample_name_index,"IID"], function(x) paste("X",x,sep=""))
+  }
   return(samplelist)
 }
 
