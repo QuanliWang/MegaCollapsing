@@ -1,10 +1,10 @@
 Package: MegaCollapsing
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Collapsing Analysis at the MegaGene Level
 Version: 0.1.0
-Date: 2018-08-15
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Date: 2020-01-31
+Author: Quanli Wang and Slave Petrovski
+Maintainer: Quanli Wang<quanliwang20@gmail.com>
+Description: Taking results from a gene/sample level varaint count matrix and a set of gene sets, the package collapses gene/sample level variant counts into geneset (MegaGene)/sample level counts and then allow users to run Fisher Exact Test efficiently.
+License: GPL(>=3)
 LazyData: TRUE
