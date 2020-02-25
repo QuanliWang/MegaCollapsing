@@ -10,7 +10,7 @@ This is a helper function to parse and standardize the sample names from sample 
 read.sample.list(sample_file, sample_ID)
 }
 \arguments{
-  \item{sample_file}{ The input sample list file. Tab delimited, with column header and the sample ID column is indicated by column name IID.
+  \item{sample_file}{ The input sample list file. Tab delimited, with column header and the sample ID column is indicated by column name IID.}
   \item{sample_ID}{ The sample column ID }
 }
 \details{

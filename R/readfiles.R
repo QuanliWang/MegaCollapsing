@@ -75,6 +75,7 @@ read.collapsing.matrix <- function(matrix_file, trunk.size = 10000) {
       if (trunk.end >= trunk.start) {
           mat <- fread(matrix_file, na.strings = c("NA",""), stringsAsFactors = FALSE, sep = "\t",
                    header = TRUE, select =  trunk.start: trunk.end)
+          mat[mat > 0] <- 1
           mat <- as(as.matrix(mat), "sparseMatrix")
           result <- cbind(result,mat)
       }
@@ -116,6 +117,9 @@ read.collapsing.data <- function(samples, syn, non.syn, sample.column = "IID") {
 
   #reorder columns
   common_sample_list <-intersect(colnames(non.syn.mat),sample_list[,sample.column])
+  if (is.numeric(common_sample_list)) {
+    common_sample_list <- as.character(common_sample_list)
+  }
   if (!is.null(syn)) {
     syn.mat <- syn.mat[,common_sample_list]
   }

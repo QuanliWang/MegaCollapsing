@@ -35,10 +35,8 @@ as.mega.matrix<- function(gene.sets, input.data) {
   gene.index <- match(common.genes, gene.names.from.collapsing.matrix)
   if (has.syn) {
       input.data$syn <- input.data$syn[gene.index,]
-      input.data$syn[input.data$syn > 0] <- 1
   }
   input.data$non.syn <- input.data$non.syn[gene.index,]
-  input.data$non.syn[input.data$non.syn > 0] <- 1
 
   gene.index <- match(common.genes, gene.names.from.gene.sets)
   gene.sets$mat <- gene.sets$mat[,gene.index]
