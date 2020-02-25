@@ -37,12 +37,16 @@ read.gene.sets <- function(mega_gene_file) {
   return(list(gene.sets = gene.sets, mat = mat))
 }
 
-read.sample.list <- function(sample_file, fix.sample.names = TRUE) {
+read.sample.list <- function(sample_file, sample_ID, fix.sample.names = TRUE) {
   samplelist <-  read.table(sample_file,header = TRUE, stringsAsFactors = FALSE, sep = "\t")
+  if (!sample_ID %in% names(samplelist) && length(names(samplelist)) == 8) {
+    samplelist <-  read.table(sample_file,header = FALSE, stringsAsFactors = FALSE, sep = "\t")
+    names(samplelist) <- c("FID",sample_ID,"PID", "MID", "sex", "status","Seq","Kit")
+  }
   if (fix.sample.names) {
-      offending_sample_name_index <- grep("^[0-9]",samplelist[,"IID"])
-      samplelist[,"IID"][offending_sample_name_index] <-
-        sapply(samplelist[offending_sample_name_index,"IID"], function(x) paste("X",x,sep=""))
+      offending_sample_name_index <- grep("^[0-9]",samplelist[,sample_ID])
+      samplelist[,sample_ID][offending_sample_name_index] <-
+        sapply(samplelist[offending_sample_name_index,sample_ID], function(x) paste("X",x,sep=""))
   }
   return(samplelist)
 }
@@ -81,7 +85,7 @@ read.collapsing.matrix <- function(matrix_file, trunk.size = 10000) {
 
 read.collapsing.data <- function(samples, syn, non.syn, sample.column = "IID") {
   if (file.exists(samples)) {
-    sample_list <- read.sample.list(samples, FALSE)
+    sample_list <- read.sample.list(samples, sample.column, FALSE)
   } else {
     stop("input sample file not found")
   }
