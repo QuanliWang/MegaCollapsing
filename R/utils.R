@@ -99,3 +99,23 @@ random.gene.sets <- function(gene.sets, genes) {
   }
   return(gene.sets)
 }
+
+split.mega.matrix<-function(mega.matrix.all, chunk.size, out.dir) {
+  if (!dir.exists(out.dir)) {
+      dir.create(out.dir)
+  }
+  nrows <- dim(mega.matrix.all$mega.non.syn)[1]
+  nchunks <- ceiling(nrows/chunk.size)
+  for(i in 1:nchunks) {
+      trunk.start <- (i-1) * chunk.size + 1
+      trunk.end <- i *chunk.size
+      if (trunk.end > nrows) {
+        trunk.end <- nrows
+      }
+      mega.matrix <- list()
+      mega.matrix$sample.list <- mega.matrix.all$sample.list
+      mega.matrix$mega.syn <- mega.matrix.all$mega.syn[trunk.start:trunk.end,]
+      mega.matrix$mega.non.syn <- mega.matrix.all$mega.non.syn[trunk.start:trunk.end,]
+      save(mega.matrix, file = file.path(out.dir, paste0("trunk", i, ".RData")),version = "2")
+  }
+}

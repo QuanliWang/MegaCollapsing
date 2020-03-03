@@ -7,12 +7,10 @@ Run regression/test using collapsing matrix with covaraiates.
 Add a lot of explainations here to justify why we set up the modeld this way.
 }
 \usage{
-burden.test(sample.list, gene.sets, syn.mat, non.syn.mat, X = NULL, Y = NULL)
+burden.test(sample.list, syn.mat, non.syn.mat, X = NULL, Y = NULL)
 }
 \arguments{
   \item{sample.list}{ An object that hold information/covaraites about samples.
-}
-  \item{gene.sets}{The list of gene sets to be anallize.
 }
   \item{syn.mat}{The syn collsping matrix to be used. We should have an option not to use this one.
 }
