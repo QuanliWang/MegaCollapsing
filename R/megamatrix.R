@@ -18,9 +18,32 @@ exclude.samples.by.genes <- function(input.data, exclude.file) {
   return(input.data)
 }
 
+get.samples.by.exclude.genes <- function(non.syn, exclude) {
+    genes <- rownames(non.syn)
+    samples <- colnames(non.syn)
+    exclude <- exclude %>% mutate(samples = "")
+    for (i in 1:dim(exclude)[1]) {
+        gene.list <- unlist(strsplit(exclude$genolist[i],","))
+        common.genes <- intersect(genes, gene.list)
+        if (length(common.genes) > 0) {
+            index <- match(common.genes, genes)
+            trimmed.data <- non.syn[index,]
+            if (is.null(dim(trimmed.data))) {
+                dim(trimmed.data) <- c(1,length(trimmed.data))
+            }
+            sample.to.exclude.index <- which(colSums(trimmed.data) > 0)
+            if (length(sample.to.exclude.index) > 0) {
+                sample.to.exclude <- samples[sample.to.exclude.index]
+                exclude$samples[i] <- paste0(sample.to.exclude, collapse = "|")
+            }
+        }
+    }
+    return(exclude)
+}
+
 as.mega.matrix<- function(gene.sets, input.data) {
   sample.list <- colnames(input.data$non.syn)
-  mega.gene.names <- rownames(gene.sets$mat)
+  #mega.gene.names <- rownames(gene.sets$mat)
 
   gene.names.from.gene.sets <- colnames(gene.sets$mat)
   gene.names.from.collapsing.matrix <- rownames(input.data$non.syn)

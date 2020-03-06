@@ -4,4 +4,6 @@ import("data.table")
 import("Matrix")
 importFrom("stats", "as.formula", "binomial", "fisher.test", "glm","median")
 importFrom("utils", "read.csv", "read.table")
+import(tidyr)
+import(dplyr)
 
