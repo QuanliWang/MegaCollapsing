@@ -1,4 +1,22 @@
-burden.test <- function(sample.list, syn.mat, non.syn.mat, X = NULL, Y = NULL, ncores = 1, excluded_samples = NULL) {
+do.fastLR <- function(data.i, Y.index = 1) {
+    YY <- data.i[,Y.index]
+    XX <- as.matrix(data.i[,-Y.index])
+    index <- which(is.na(YY))
+    if (length(index)>0) {
+      YY <- YY[-index]
+      XX <- XX[-index,]
+    }
+    XX <- cbind(1,XX)
+    res2 <- fastLR(XX, YY, eps_f = 1e-06)
+    v <- res2$fitted.values * (1 - res2$fitted.values)
+    b <- diag(solve(sweep(t(XX), 2, v, "*") %*% XX))
+    se_beta <- sqrt(b)
+    z <- res2$coefficients / se_beta
+    p <- pnorm(abs(z), lower.tail = FALSE) * 2
+    return (list(p = p, beta = res2$coefficients))
+}
+
+burden.test <- function(sample.list, syn.mat, non.syn.mat, X = NULL, Y = NULL, ncores = 1, excluded_samples = NULL, do.fast = TRUE) {
 
   if (is.null(Y)) {
     if (is.element("Status",names(sample.list))) {
@@ -26,11 +44,11 @@ burden.test <- function(sample.list, syn.mat, non.syn.mat, X = NULL, Y = NULL, n
 
   p_values <- matrix(NA,length(mega.gene.names),p)
   rownames(p_values) <- mega.gene.names
-  colnames(p_values) <- c('(Intercept)', 'non.syn', 'syn', names(data.base)[-1])
+  colnames(p_values) <- c('(Intercept)', names(data.base)[-1], 'non.syn', 'syn')
 
   betas <- matrix(NA,length(mega.gene.names),p)
   rownames(betas) <- mega.gene.names
-  colnames(betas) <- c('(Intercept)', 'non.syn', 'syn', names(data.base)[-1])
+  colnames(betas) <- c('(Intercept)', names(data.base)[-1], 'non.syn', 'syn')
   fm <- as.formula(paste("Y~", paste(colnames(p_values)[-1], collapse="+")))
 
   if (ncores >1) {
@@ -68,16 +86,22 @@ burden.test <- function(sample.list, syn.mat, non.syn.mat, X = NULL, Y = NULL, n
             data.i <- data.i[-common.samples.index,]
           }
         }
-        coef <- summary(glm( fm, data = data.i, family = binomial(link = logit)))$coef
-        p_value <- coef[,4]
-        beta <- coef[,1]
+        if (do.fast) {
+            r <- do.fastLR(data.i)
+            p_value <- r$p
+            beta <- r$beta
+        } else {
+            coef <- summary(glm( fm, data = data.i, family = binomial(link = logit)))$coef
+            p_value <- coef[,4]
+            beta <- coef[,1]
+        }
         list(p_value, beta, i)
       }, silent=TRUE)
     })
     indexes <- sapply(out,function(x) x[[3]])
     for (i in 1:length(indexes)) {
-      p_values[indexes[i],names(out[[i]][[2]])] <- out[[i]][[1]]
-      betas[indexes[i],names(out[[i]][[2]])] <- out[[i]][[2]]
+      p_values[indexes[i],] <- out[[i]][[1]]
+      betas[indexes[i],] <- out[[i]][[2]]
     }
   } else {
     for (i in 1:length(mega.gene.names)) {
@@ -96,12 +120,20 @@ burden.test <- function(sample.list, syn.mat, non.syn.mat, X = NULL, Y = NULL, n
                 data.i <- data.i[-common.samples.index,]
             }
         }
-        coef <- summary(glm( fm, data = data.i, family = binomial(link = logit)))$coef
-        p_values[i,rownames(coef)] <- coef[,4]
-        betas[i,rownames(coef)] <- coef[,1]
+        if (do.fast) {
+            r <- do.fastLR(data.i)
+            p_values[i,] <- r$p
+            betas[i,] <- r$beta
+        } else {
+            coef <- summary(glm( fm, data = data.i, family = binomial(link = logit)))$coef
+            p_values[i,] <- coef[,4]
+            betas[i,] <- coef[,1]
+        }
+
       }, silent=TRUE)
     }
   }
   return(list(p_values = p_values, betas = betas, mega.gene.names = mega.gene.names))
 }
+
 

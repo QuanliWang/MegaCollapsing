@@ -1,11 +1,11 @@
 Package: MegaCollapsing
 Type: Package
 Title: Collapsing Analysis at the MegaGene Level
-Version: 0.1.2
+Version: 0.1.3
 Date: 2020-01-31
 Author: Quanli Wang and Slave Petrovski
 Maintainer: Quanli Wang<quanliwang20@gmail.com>
 Description: Taking results from a gene/sample level varaint count matrix and a set of gene sets, the package collapses gene/sample level variant counts into geneset (MegaGene)/sample level counts and then allow users to run Fisher Exact Test efficiently.
-Depends: data.table, Matrix, foreach, iterators,doParallel,tidyr, dplyr
+Depends: data.table, Matrix, foreach, iterators,doParallel,tidyr, dplyr,RcppNumerical
 License: GPL(>=3)
 LazyData: TRUE
