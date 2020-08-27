@@ -7,7 +7,7 @@ do.fastLR <- function(data.i, Y.index = 1) {
       XX <- XX[-index,]
     }
     XX <- cbind(1,XX)
-    res2 <- fastLR(XX, YY, eps_f = 1e-06)
+    res2 <- fastLR(XX, YY)
     v <- res2$fitted.values * (1 - res2$fitted.values)
     b <- diag(solve(sweep(t(XX), 2, v, "*") %*% XX))
     se_beta <- sqrt(b)
@@ -16,7 +16,7 @@ do.fastLR <- function(data.i, Y.index = 1) {
     return (list(p = p, beta = res2$coefficients))
 }
 
-burden.test <- function(sample.list, syn.mat, non.syn.mat, X = NULL, Y = NULL, ncores = 1, excluded_samples = NULL, do.fast = TRUE) {
+burden.test <- function(sample.list, syn.mat, non.syn.mat, X = NULL, Y = NULL, ncores = 1, excluded_samples = NULL, do.fast = FALSE) {
 
   if (is.null(Y)) {
     if (is.element("Status",names(sample.list))) {
@@ -61,7 +61,7 @@ burden.test <- function(sample.list, syn.mat, non.syn.mat, X = NULL, Y = NULL, n
       ncores <- getDoParWorkers()
     } else {
       cl.create <- TRUE
-      cl <- parallel::makeCluster(ncores, outfile = "")
+      cl <- parallel::makeCluster(ncores, outfile = "", setup_timeout = 300)
       doParallel::registerDoParallel(cl)
       on.exit({
         parallel::stopCluster(cl)

@@ -1,8 +1,8 @@
-
 burden.test.with.permutation <-function(sample.list, gene.set, syn.mat, non.syn.mat, X = NULL, Y = NULL, n.permutations = 100) {
   # get observed p-values
   print("computing observed p-values...")
-  p.observed <- burden.test(sample.list, gene.set, syn.mat, non.syn.mat, X, Y)[,"non.syn"]
+  p.observed.list <- burden.test(sample.list, syn.mat, non.syn.mat, X, Y,ncores=1)
+  p.observed <- p.observed.list[['p_values']][,'non.syn']
   p.observed[is.na(p.observed)] <- 1
 
   if (is.null(Y)) {
@@ -11,6 +11,8 @@ burden.test.with.permutation <-function(sample.list, gene.set, syn.mat, non.syn.
     } else {
       stop("default Y variable was not found")
     }
+  } else {
+    Yv<-Y
   }
 
   #Number of cases and controls
@@ -20,7 +22,7 @@ burden.test.with.permutation <-function(sample.list, gene.set, syn.mat, non.syn.
   Y.perm.template = numeric(n.samples)
 
   #permutation, save all p-values just in case median will be needed later on
-  permed_p_values <- matrix(1,length(gene.set),n.permutations)
+  permed_p_values <- matrix(1,length(gene.set$gene.sets),n.permutations)
   KK <- matrix(0,n.permutations,n.cases)
   sample.list.perm <- sample.list
   for (i in 1: n.permutations) {
@@ -28,8 +30,9 @@ burden.test.with.permutation <-function(sample.list, gene.set, syn.mat, non.syn.
     K <- sample.int(n.samples, size = n.cases, replace = FALSE)
     Y.perm[K] <- 1
     sample.list.perm[,'Status'] <- Y.perm + 1
-    print(paste("Running permutaiton ", i))
-    ps <- burden.test(sample.list.perm, gene.set, syn.mat, non.syn.mat, X, Y)[,"non.syn"]
+    print(paste("Running permutation ", i))
+    ps.list <- burden.test(sample.list.perm, syn.mat, non.syn.mat, X, Y.perm)
+    ps <- ps.list[['p_values']][,'non.syn']
     ps[is.na(ps)] <- 1
     permed_p_values[,i] <- ps
     KK[i,] <- K
@@ -52,7 +55,7 @@ burden.test.with.permutation <-function(sample.list, gene.set, syn.mat, non.syn.
   p_summary[,1] <- P.perm
   p_summary[,2] <- p.observed
   p_summary[,3] <- P.freq
-  rownames(p_summary) <-  lapply(gene.set, function (x) x[[1]])
+  rownames(p_summary) <-  names(gene.set$gene.sets)
   colnames(p_summary) <- c('perm','observed','freq')
   out$p_summary <- p_summary
   out

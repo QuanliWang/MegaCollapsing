@@ -18,12 +18,15 @@ exclude.samples.by.genes <- function(input.data, exclude.file) {
   return(input.data)
 }
 
-get.samples.by.exclude.genes <- function(non.syn, exclude) {
+get.samples.by.exclude.genes <- function(non.syn, exclude, exclude.all = NULL) {
     genes <- rownames(non.syn)
     samples <- colnames(non.syn)
     exclude <- exclude %>% mutate(samples = "")
     for (i in 1:dim(exclude)[1]) {
         gene.list <- unlist(strsplit(exclude$genolist[i],","))
+        if (!is.null(exclude.all)) {
+          gene.list <- union(gene.list,exclude.all)
+        }
         common.genes <- intersect(genes, gene.list)
         if (length(common.genes) > 0) {
             index <- match(common.genes, genes)
