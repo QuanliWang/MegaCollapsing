@@ -1,8 +1,14 @@
-read.data <- function(sample.file, matrix.file, filter.list = NULL) {
+read.data <- function(sample.file, matrix.file, filter.list = NULL, sample.column = 2, case.control.column = 6) {
   #get sample and phenotype label information
   ped <- read.table(sample.file,header = FALSE, sep = '\t', as.is = TRUE)
-  samples <- ped[,2]
-  is.case <- as.matrix(ped[,6] ==2)
+  if (is.null(case.control.column)) {
+      case.control.column <- 6
+  }
+  if (is.null(sample.column)) {
+      sample.column <- 2
+  }
+  samples <- ped[,sample.column]
+  is.case <- as.matrix(ped[case.control.column,] ==2)
   rownames(is.case) <- samples
 
   #get count matrix
@@ -30,13 +36,11 @@ read.data <- function(sample.file, matrix.file, filter.list = NULL) {
   out$data <- matrix
   out$is.case <- is.case
 
-
   out
 }
 
-get.pvalues <-function(matrix, is.case, n.permutations = 1000, with_contingency = FALSE) {
+get.pvalues <-function(matrix, is.case, n.permutations = 1000) {
   #Number of cases and controls
-  matrix[matrix>0] <- 1
   n.samples <- length(is.case)
   n.cases <- sum(is.case)
   n.controls <- n.samples - n.cases
@@ -59,54 +63,31 @@ get.pvalues <-function(matrix, is.case, n.permutations = 1000, with_contingency 
     }
   }
 
-  total.1 <- rowSums(matrix)
-  if (n.permutations > 0) {
   #permutation, save all p-values just in case median will be needed later on
-    P.Values <- matrix(1,dim(matrix)[1],n.permutations)
-
-    for (i in 1: n.permutations) {
-      K <- sample.int(n.samples, size = n.cases, replace = FALSE)
-      Labels.1.1 <- rowSums(matrix[,K])
-      Labels.0.1 <- total.1 - Labels.1.1
-      P.Values[,i] <- sort(Fisher.precompute[cbind(Labels.1.1+1,Labels.0.1+1)])
-    }
-    P.perm <- rowMeans(P.Values)
-    #P.perm <- sapply(P.Values, function(x) quantile(x,c(0.025, 0.50, 0.975)))
+  P.Values <- matrix(1,dim(matrix)[1],n.permutations)
+  total.1 <- rowSums(matrix)
+  for (i in 1: n.permutations) {
+    K <- sample.int(n.samples, size = n.cases, replace = FALSE)
+    Labels.1.1 <- rowSums(matrix[,K])
+    Labels.0.1 <- total.1 - Labels.1.1
+    P.Values[,i] <- sort(Fisher.precompute[cbind(Labels.1.1+1,Labels.0.1+1)])
   }
+  P.perm <- rowMeans(P.Values)
+  #P.perm <- sapply(P.Values, function(x) quantile(x,c(0.025, 0.50, 0.975)))
 
 
   #compute observed (true case control configration) p-values
   K <- which(is.case)
   Labels.1.1 <- rowSums(matrix[,K])
   Labels.0.1 <- total.1 - Labels.1.1
-
-  if (n.permutations > 0) {
-    P.observed <- sort(Fisher.precompute[cbind(Labels.1.1+1,Labels.0.1+1)])
-  } else {
-    P.observed <- Fisher.precompute[cbind(Labels.1.1+1,Labels.0.1+1)] #no sorting
-  }
-  names(P.observed) <- rownames(matrix)
-
-  if (with_contingency) {
-    contingency_table <- matrix(NA, nrow = length(P.observed),4)
-    contingency_table[,1] <- Labels.1.1
-    contingency_table[,2] <- n.cases - contingency_table[,1]
-    contingency_table[,3] <- Labels.0.1
-    contingency_table[,4] <- n.controls - contingency_table[,3]
-    rownames(contingency_table) <- rownames(matrix)
-  }
+  P.observed <- sort(Fisher.precompute[cbind(Labels.1.1+1,Labels.0.1+1)])
 
   out <- list()
-  if (n.permutations > 0) {
-    out$perm <- P.perm
-    #out$perm <- P.perm[,2]
-    #out$perm.LCI <- P.perm[,1]
-    #out$perm.UCI <- P.perm[,3]
-  }
+  out$perm <- P.perm
+  #out$perm <- P.perm[,2]
+  #out$perm.LCI <- P.perm[,1]
+  #out$perm.UCI <- P.perm[,3]
   out$observed <- P.observed
-  if (with_contingency) {
-    out$contingency.table <- contingency_table
-  }
   out
 }
 
@@ -117,4 +98,24 @@ random.gene.sets <- function(gene.sets, genes) {
     gene.sets[[i]][3:gene.set.sizes[i]] <- sample(genes,gene.set.sizes[i]-2)
   }
   return(gene.sets)
+}
+
+split.mega.matrix<-function(mega.matrix.all, chunk.size, out.dir) {
+  if (!dir.exists(out.dir)) {
+      dir.create(out.dir)
+  }
+  nrows <- dim(mega.matrix.all$mega.non.syn)[1]
+  nchunks <- ceiling(nrows/chunk.size)
+  for(i in 1:nchunks) {
+      trunk.start <- (i-1) * chunk.size + 1
+      trunk.end <- i *chunk.size
+      if (trunk.end > nrows) {
+        trunk.end <- nrows
+      }
+      mega.matrix <- list()
+      mega.matrix$sample.list <- mega.matrix.all$sample.list
+      mega.matrix$mega.syn <- mega.matrix.all$mega.syn[trunk.start:trunk.end,]
+      mega.matrix$mega.non.syn <- mega.matrix.all$mega.non.syn[trunk.start:trunk.end,]
+      save(mega.matrix, file = file.path(out.dir, paste0("trunk", i, ".RData")),version = "2")
+  }
 }
