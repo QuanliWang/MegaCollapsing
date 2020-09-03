@@ -84,7 +84,7 @@ read.collapsing.matrix <- function(matrix_file, trunk.size = 10000) {
   return(result)
 }
 
-read.collapsing.data <- function(samples, syn, non.syn, sample.column = "IID") {
+read.collapsing.data <- function(samples, syn, non.syn, sample.column = "IID", exclude_genes = NULL) {
   if (file.exists(samples)) {
     sample_list <- read.sample.list(samples, sample.column, FALSE)
   } else {
@@ -115,6 +115,16 @@ read.collapsing.data <- function(samples, syn, non.syn, sample.column = "IID") {
     }
   }
 
+  if (!is.null(exclude_genes)) {
+    if (file.exists(exclude_genes)) {
+      genes.to.exclude <- unname(unlist(read.csv(exclude_genes, stringsAsFactors = FALSE,  header = FALSE)))
+    } else {
+      stop("input exclude_genes file not found")
+    }
+  } else {
+    genes.to.exclude = NULL
+  }
+
   #reorder columns
   common_sample_list <-intersect(colnames(non.syn.mat),sample_list[,sample.column])
   if (is.numeric(common_sample_list)) {
@@ -128,6 +138,13 @@ read.collapsing.data <- function(samples, syn, non.syn, sample.column = "IID") {
   #redorder rows
   rownames(sample_list) <- sample_list[,sample.column]
   sample_list <- sample_list[common_sample_list,]
+
+  if (length(genes.to.exclude) > 0) {
+      non.syn.mat <- non.syn.mat[!row.names(non.syn.mat) %in% genes.to.exclude,]
+      if (!is.null(syn)) {
+        syn.mat <- syn.mat[!row.names(syn.mat) %in% genes.to.exclude,]
+      }
+  }
   if (is.null(syn)) {
     return(list( sample.list = sample_list, non.syn = non.syn.mat))
   } else {
